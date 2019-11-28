@@ -4,7 +4,7 @@ branches:
   only:
   - master
 script:
-- choco pack lazydocker\lazydocker.nuspec
+- choco pack lazydocker\\lazydocker.nuspec
 after_script:
 - choco apikey --key $CHOCOAPIKEY --source https://push.chocolatey.org/
 - choco push
