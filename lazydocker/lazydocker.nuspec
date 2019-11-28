@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>lazydocker</id>
+    <version>0.7.6</version>
+    <packageSourceUrl>https://github.com/zverev-iv/choco-lazydocker</packageSourceUrl>
+    <owners>zverev-iv</owners>
+    <title>lazydocker (Install)</title>
+    <authors>Jesse Duffield</authors>
+    <projectUrl>https://github.com/jesseduffield/lazydocker</projectUrl>
+    <iconUrl>https://cdn.statically.io/gh/zverev-iv/choco-lazydocker/master/lazydocker/logo.png</iconUrl>
+    <copyright>2019 Jesse Duffield</copyright>
+    <licenseUrl>https://cdn.statically.io/gh/jesseduffield/lazydocker/182d8109/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <docsUrl>https://cdn.statically.io/gh/jesseduffield/lazydocker/182d8109/README.md</docsUrl>
+    <bugTrackerUrl>https://github.com/jesseduffield/lazydocker/issues</bugTrackerUrl>
+    <tags>lazydocker docker docker-compose container kubernetes containerd</tags>
+    <summary>A simple terminal UI for both docker and docker-compose, written in Go with the gocui library.</summary>
+    <description>What a headache!
+
+Memorising docker commands is hard. Memorising aliases is slightly less hard. Keeping track of your containers across multiple terminal windows is near impossible. What if you had all the information you needed in one terminal window with every common command living one keypress away (and the ability to add custom commands as well). Lazydocker's goal is to make that dream a reality.</description>
+    <releaseNotes>https://github.com/jesseduffield/lazydocker/releases</releaseNotes>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
