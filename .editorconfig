@@ -1,0 +1,21 @@
+root = true
+
+[*]
+end_of_line = crlf
+charset = utf-8
+trim_trailing_whitespace = true
+
+[*.{cake,ps1}]
+indent_style = tab
+indent_size = 4
+insert_final_newline = true
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+
+[*.json]
+indent_style = space
+indent_size = 2
+insert_final_newline = false

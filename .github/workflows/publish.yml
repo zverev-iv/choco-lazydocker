@@ -1,0 +1,23 @@
+name: Publish
+
+on:
+  push:
+    branches: [master]
+
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: run cake
+        env:
+          CHOCOAPIKEY: ${{ secrets.CHOCOAPIKEY }}
+          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+          DOTNET_CLI_TELEMETRY_OPTOUT: 1
+          DOTNET_NOLOGO: 1
+        run: |
+          dotnet tool restore
+          dotnet cake
