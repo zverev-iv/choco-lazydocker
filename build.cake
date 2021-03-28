@@ -13,10 +13,10 @@ var packageInfo = new ChocolateyPackSettings {
         },
     Copyright                = "2021 Jesse Duffield",
     ProjectUrl               = new Uri("https://github.com/jesseduffield/lazydocker"),
-    DocsUrl                  = new Uri("https://cdn.statically.io/gh/jesseduffield/lazydocker/182d8109/README.md"),
+    DocsUrl                  = new Uri("https://github.com/jesseduffield/lazydocker/blob/master/README.md"),
     BugTrackerUrl            = new Uri("https://github.com/jesseduffield/lazydocker/issues"),
     IconUrl                  = new Uri("https://cdn.statically.io/gh/zverev-iv/choco-lazydocker/master/lazydocker/logo.png"),
-    LicenseUrl               = new Uri("https://cdn.statically.io/gh/jesseduffield/lazydocker/182d8109/LICENSE"),
+    LicenseUrl               = new Uri("https://raw.githubusercontent.com/jesseduffield/lazydocker/master/LICENSE"),
     RequireLicenseAcceptance = false,
     Summary                  = "A simple terminal UI for both docker and docker-compose, written in Go with the gocui library.",
     Description              = @"What a headache!
