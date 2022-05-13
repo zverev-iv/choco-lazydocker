@@ -3,7 +3,7 @@ var target = Argument("target", "Publish");
 var packageInfo = new ChocolateyPackSettings {
     //PACKAGE SPECIFIC SECTION
     Id                       = "Lazydocker",
-    Version                  = "0.12.0",
+    Version                  = "0.18.1",
     PackageSourceUrl         = new Uri("https://github.com/zverev-iv/choco-lazydocker"),
     Owners                   = new[] {"zverev-iv"},
     //SOFTWARE SPECIFIC SECTION
