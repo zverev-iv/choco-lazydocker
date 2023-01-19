@@ -1,65 +1,148 @@
+#addin nuget:?package=Cake.FileHelpers&version=6.0.0
+#addin nuget:?package=Cake.Json&version=7.0.1
+
+#load "lib/PackageInfo.cs"
+
+///////////////////////////////////////////////////////////////////////////////
+// ARGUMENTS
+///////////////////////////////////////////////////////////////////////////////
+
 var target = Argument("target", "Publish");
 
-var packageInfo = new ChocolateyPackSettings {
-    //PACKAGE SPECIFIC SECTION
-    Id                       = "Lazydocker",
-    Version                  = "0.18.1",
-    PackageSourceUrl         = new Uri("https://github.com/zverev-iv/choco-lazydocker"),
-    Owners                   = new[] {"zverev-iv"},
-    //SOFTWARE SPECIFIC SECTION
-    Title                    = "lazydocker",
-    Authors                  = new[] {
-        "Jesse Duffield"
-        },
-    Copyright                = "2021 Jesse Duffield",
-    ProjectUrl               = new Uri("https://github.com/jesseduffield/lazydocker"),
-    DocsUrl                  = new Uri("https://github.com/jesseduffield/lazydocker/blob/master/README.md"),
-    BugTrackerUrl            = new Uri("https://github.com/jesseduffield/lazydocker/issues"),
-    IconUrl                  = new Uri("https://cdn.statically.io/gh/zverev-iv/choco-lazydocker/master/lazydocker/logo.png"),
-    LicenseUrl               = new Uri("https://raw.githubusercontent.com/jesseduffield/lazydocker/master/LICENSE"),
-    RequireLicenseAcceptance = false,
-    Summary                  = "A simple terminal UI for both docker and docker-compose, written in Go with the gocui library.",
-    Description              = @"What a headache!
+///////////////////////////////////////////////////////////////////////////////
+// SETUP / TEARDOWN
+///////////////////////////////////////////////////////////////////////////////
 
-Memorising docker commands is hard. Memorising aliases is slightly less hard. Keeping track of your containers across multiple terminal windows is near impossible. What if you had all the information you needed in one terminal window with every common command living one keypress away (and the ability to add custom commands as well). Lazydocker's goal is to make that dream a reality.",
-    ReleaseNotes             = new [] {"https://github.com/jesseduffield/lazydocker/releases"},
-    Files                    = new [] {
-        new ChocolateyNuSpecContent {Source = System.IO.Path.Combine("src", "**"), Target = "tools"}
-        },
-    Tags                     = new [] {
-        "lazydocker",
-        "docker",
-        "docker-compose",
-        "container",
-        "kubernetes",
-        "containerd"
-        }
-    };
+Setup<PackageInfo>(setupContext => DeserializeJsonFromFile<PackageInfo>("config.json"));
+
+Teardown(ctx =>
+{
+   Information("Finished running tasks.");
+});
+
+///////////////////////////////////////////////////////////////////////////////
+// TASKS
+///////////////////////////////////////////////////////////////////////////////
+
+Task("Print config")
+    .Does<PackageInfo>(data =>
+{
+	Information(SerializeJson<PackageInfo>(data));
+});
 
 Task("Clean")
-    .Does(() =>
+    .Does<PackageInfo>(data =>
 {
     DeleteFiles("./**/*.nupkg");
-	DeleteFiles("./**/*.nuspec");
+    DeleteFiles("./**/*.nuspec");
+    DeleteFiles(new DirectoryPath(data.BinDir).Combine("*").ToString());
+    if (DirectoryExists(data.BinDir))
+    {
+        DeleteDirectory(data.BinDir, new DeleteDirectorySettings {
+        Force = true
+        });
+    }
+    DeleteFiles(new DirectoryPath(data.TempDir).Combine("*").ToString());
+    if (DirectoryExists(data.TempDir))
+    {
+        DeleteDirectory(data.TempDir, new DeleteDirectorySettings {
+        Force = true
+        });
+    }
+});
+
+Task(".gitignore clean")
+    .Does<PackageInfo>(data =>
+{
+    var regexes = FileReadLines("./.gitignore");
+    foreach(var regex in regexes)
+    {
+        DeleteFiles(regex);
+    }
+});
+
+Task("Copy src to bin")
+    .Does<PackageInfo>(data =>
+{
+    if (!DirectoryExists(data.BinDir))
+    {
+        CreateDirectory(data.BinDir);
+    }
+    CopyFiles("src/*", data.BinDir);
+});
+
+Task("Set package args")
+    .IsDependentOn("Copy src to bin")
+    .Does<PackageInfo>(data =>
+{
+    ReplaceTextInFiles(new DirectoryPath(data.BinDir).Combine("*").ToString(), "${softwareName}", data.PackageSettings.Id);
+
+    string hash  = null;
+    string hash64 = null;
+    if (!DirectoryExists(data.TempDir))
+    {
+        CreateDirectory(data.TempDir);
+    }
+    if(!string.IsNullOrWhiteSpace(data.Package32Url))
+    {
+        Information("Download x86 binary");
+        var uri = new Uri(data.Package32Url);
+        var fileName = System.IO.Path.GetFileName(uri.LocalPath);
+        var fullFileName = new DirectoryPath(data.TempDir).Combine(fileName).ToString();
+        DownloadFile(data.Package32Url, fullFileName);
+        Information("Calculate sha256 for x86 binary");
+        hash = CalculateFileHash(fullFileName).ToHex();
+        Information("Write x86 data in sources");
+        ReplaceTextInFiles(new DirectoryPath(data.BinDir).Combine("*").ToString(), "${url}", data.Package32Url);
+        ReplaceTextInFiles(new DirectoryPath(data.BinDir).Combine("*").ToString(), "${checksum}", hash);
+        ReplaceTextInFiles(new DirectoryPath(data.BinDir).Combine("*").ToString(), "${checksumType}", "sha256");
+    }
+    if(data.Package64Url == data.Package32Url && hash != null)
+    {
+        Information("x86 and x64 uri are the same");
+        Information("Write x64 data in sources");
+        ReplaceTextInFiles(new DirectoryPath(data.BinDir).Combine("*").ToString(), "${url64bit}", data.Package64Url);
+        ReplaceTextInFiles(new DirectoryPath(data.BinDir).Combine("*").ToString(), "${checksum64}", hash);
+        ReplaceTextInFiles(new DirectoryPath(data.BinDir).Combine("*").ToString(), "${checksumType64}", "sha256");
+    }
+    else if(!string.IsNullOrWhiteSpace(data.Package64Url))
+    {
+        Information("Download x64 binary");
+        var uri = new Uri(data.Package64Url);
+        var fullFileName = System.IO.Path.Combine(data.TempDir, System.IO.Path.GetFileName(uri.LocalPath));
+        DownloadFile(data.Package64Url, fullFileName);
+        Information("Calculate sha256 for x86 binary");
+        hash64 = CalculateFileHash(fullFileName).ToHex();
+        Information("Write x64 data in sources");
+        ReplaceTextInFiles(new DirectoryPath(data.BinDir).Combine("*").ToString(), "${url64bit}", data.Package64Url);
+        ReplaceTextInFiles(new DirectoryPath(data.BinDir).Combine("*").ToString(), "${checksum64}", hash64);
+        ReplaceTextInFiles(new DirectoryPath(data.BinDir).Combine("*").ToString(), "${checksumType64}", "sha256");
+    }
 });
 
 Task("Pack")
     .IsDependentOn("Clean")
-    .Does(() =>
+    .IsDependentOn("Set package args")
+    .Does<PackageInfo>(data =>
 {
-    ChocolateyPack(packageInfo);
+    ChocolateyPack(data.PackageSettings);
 });
 
 Task("Publish")
     .IsDependentOn("Pack")
-    .Does(() =>
+    .Does<PackageInfo>(data =>
 {
-	var publishKey = EnvironmentVariable<string>("CHOCOAPIKEY", null);
-    var package = $"{packageInfo.Id}.{packageInfo.Version}.nupkg";
+    var publishKey = EnvironmentVariable<string>("CHOCOAPIKEY", null);
+    var package = $"{data.PackageSettings.Id}.{data.PackageSettings.Version}.nupkg";
 
-    ChocolateyPush(package, new ChocolateyPushSettings {
+    ChocolateyPush(package, new ChocolateyPushSettings
+    {
         ApiKey = publishKey
     });
 });
+
+//////////////////////////////////////////////////////////////////////
+// EXECUTION
+//////////////////////////////////////////////////////////////////////
 
 RunTarget(target);
