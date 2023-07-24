@@ -137,6 +137,7 @@ Task("Publish")
 
     ChocolateyPush(package, new ChocolateyPushSettings
     {
+        Source = "https://push.chocolatey.org/",
         ApiKey = publishKey
     });
 });
